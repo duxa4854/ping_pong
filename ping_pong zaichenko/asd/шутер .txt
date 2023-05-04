@@ -1,0 +1,118 @@
+#Создай собственный Шутер!
+from random import randint 
+from pygame import *
+#парпметры окно 
+display.set_caption("SpaceWar")
+img_back = "galaxy.jpg" 
+img_hero = "rocket.png"
+img_enemy = "ufo.png" 
+img_bullet = "bullet.png"
+window = display.set_mode((700, 500))
+background = transform.scale(image.load(img_back), (700, 500))
+
+#класс GameSprite
+class GameSprite(sprite.Sprite):
+     def __init__(self, player_image, player_x, player_y, size_x, size_y, player_speed):
+          sprite.Sprite.__init__(self)
+          self.image = transform.scale(image.load(player_image), (size_x, size_y))
+          self.speed = player_speed
+          self.rect = self.image.get_rect()
+          self.rect.x = player_x
+          self.rect.y = player_y
+     def reset(self):
+          window.blit(self.image,(self.rect.x, self.rect.y))
+
+class Player(GameSprite):
+     def update(self):
+          keys = key.get_pressed()
+          if keys[K_LEFT] and self.rect.x > 5:
+               self.rect.x -= self.speed
+          if keys[K_RIGHT] and self.rect.x < 700 - 80:
+               self.rect.x += self.speed
+     def fire(self):
+          bullet = Bullet(img_bullet,self.rect.centerx, self.rect.top, 15, 20, 10)
+          
+          bullets.add(bullet)
+propusk = 0 
+ybit = 0 
+class Enemy(GameSprite):
+     def update(self):
+          self.rect.y += self.speed
+          global propusk
+          if self.rect.y > 500:
+               self.rect.x = randint(50, 700 - 80)
+               self.rect.y = 0
+          propusk = propusk + 1
+
+
+class Bullet(GameSprite):
+     def update(self):
+          global lost
+          self.rect.y -= self.speed
+          if self.rect.y < 0:
+               self.kill()
+
+
+packman = Player(img_hero, 5, 500 - 100, 55 ,70, 10)
+
+monsters = sprite.Group()
+
+bullets = sprite.Group()
+
+for i in range(5):
+     monster = Enemy(img_enemy,randint(70,270),10,50,50,randint(1,2))
+     monsters.add(monster)
+font.init()
+
+
+#музыkа
+mixer.init()
+mixer.music.load("space.ogg")
+mixer.music.play()
+space = mixer.Sound("space.ogg")
+
+#настройка частоты кадров 
+clock = time.Clock()
+FPS=120
+font = font.SysFont("Arial", 30)
+#пожилой цикл 
+game = True
+finish = False
+while game:
+     win = font.render('Счет:'+str(ybit),True,(255,215,0))
+     lose = font.render('Пропущено:'+str(propusk),True,(255,215,0))
+     for e in event.get():
+          if e.type == QUIT:
+               game = False 
+          elif e.type == KEYDOWN:
+               if e.key == K_SPACE:
+                    packman.fire()
+
+                    
+     if finish != True:
+          window.blit(background,(0,0))
+          #спрайты
+          packman.reset()
+          packman.update()
+
+          monsters.draw(window)
+          monsters.update()
+
+          window.blit(win,(10, 10))
+          window.blit(lose,(10, 40)) 
+
+          bullets.update()
+          bullets.draw(window )   
+
+     hits = sprite.groupcollide(monsters, bullets,True,True,)
+
+
+     if sprite.spritecollide(packman, monsters, False):
+          pass
+
+
+     #clock.tick(FPS)
+     #print(clock.get_fps())
+     #обновление экрана 
+     display.update()
+Ы
